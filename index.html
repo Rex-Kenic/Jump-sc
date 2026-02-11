@@ -2,143 +2,145 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connect Hub 3D Premium</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SYSTEM_CRITICAL_FAILURE</title>
     <style>
-        body {
-            background: #020617;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            perspective: 2000px; /* Memberikan kedalaman 3D */
-            margin: 0;
-            overflow-x: hidden;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: black; color: #00ff41; font-family: 'Consolas', monospace; overflow: hidden; height: 100vh; }
+
+        /* Layar Awal (Trik Izin Browser) */
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 10000; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        .btn-start {
+            padding: 15px 30px; background: transparent; color: #00ff41;
+            border: 2px solid #00ff41; font-weight: bold; cursor: pointer; font-size: 1.2rem;
         }
 
-        .container-3d {
-            transform-style: preserve-3d;
-            animation: float 6s ease-in-out infinite;
-        }
+        #matrix { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.2; }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotateX(10deg); }
-            50% { transform: translateY(-20px) rotateX(15deg); }
-        }
+        #terminal { padding: 20px; height: 85vh; display: flex; flex-direction: column; justify-content: flex-end; }
+        .log { font-size: 0.8rem; margin-bottom: 2px; line-height: 1.2; }
+        .danger { color: #ff0000; font-weight: bold; }
 
-        .glass-3d {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 40px;
-            box-shadow: 
-                0 50px 100px rgba(0,0,0,0.7),
-                inset 0 0 20px rgba(59, 130, 246, 0.1);
-            transform: translateZ(50px);
-        }
+        #footer { position: fixed; bottom: 0; width: 100%; background: #111; padding: 15px; border-top: 1px solid #333; }
+        .bar-bg { width: 100%; height: 12px; border: 1px solid #00ff41; margin-top: 5px; }
+        .bar-fill { width: 0%; height: 100%; background: #00ff41; }
 
-        .input-3d {
-            background: #0f172a !important;
-            box-shadow: inset 4px 4px 10px rgba(0,0,0,0.5), inset -1px -1px 5px rgba(255,255,255,0.05);
-            border: none;
-            transition: 0.3s;
-        }
+        .glitch { animation: flash 0.1s infinite; }
+        @keyframes flash { 0% { background: rgba(255,0,0,0.5); } 100% { background: transparent; } }
 
-        .btn-3d {
-            background: linear-gradient(145deg, #3b82f6, #1d4ed8);
-            box-shadow: 0 10px 0 #1e40af, 0 20px 30px rgba(0,0,0,0.4);
-            transform: translateZ(30px);
-            transition: 0.1s;
+        /* Jumpscare Video */
+        #jumpscare-container {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh; background: black; z-index: 9999;
         }
-
-        .btn-3d:active {
-            transform: translateZ(10px) translateY(8px);
-            box-shadow: 0 2px 0 #1e40af;
-        }
+        video { width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
-<body>
+<body id="main-body">
 
-    <div class="container-3d w-full max-w-md p-6">
-        <div class="glass-3d p-8 md:p-10">
-            <div class="text-center mb-8">
-                <h1 class="text-4xl font-black text-blue-400 italic tracking-tighter mb-2">CONNECT HUB</h1>
-                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">3D Digital Database</p>
-            </div>
+<div id="start-screen">
+    <p style="margin-bottom: 20px; text-align: center;">SYSTEM ENCRYPTION DETECTED<br>Tap to decrypt and access logs</p>
+    <button class="btn-start" onclick="initSimulation()">ACCESS SYSTEM</button>
+</div>
 
-            <form id="mainForm" class="space-y-4">
-                <div class="relative">
-                    <i class="fas fa-user absolute left-4 top-4 text-blue-500"></i>
-                    <input type="text" id="nama" placeholder="NAMA LENGKAP" required class="input-3d w-full pl-12 pr-4 py-4 rounded-2xl text-white outline-none">
-                </div>
+<canvas id="matrix"></canvas>
 
-                <div class="relative">
-                    <i class="fab fa-whatsapp absolute left-4 top-4 text-green-500 text-lg"></i>
-                    <input type="number" id="wa" placeholder="WHATSAPP (628...)" required class="input-3d w-full pl-12 pr-4 py-4 rounded-2xl text-white outline-none">
-                </div>
+<div id="terminal">
+    <div style="color:red; text-align:center; font-weight:bold; margin-bottom:20px;">[ CRITICAL: REMOTE ACCESS ACTIVE ]</div>
+    <div id="logs"></div>
+</div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="relative">
-                        <i class="fab fa-instagram absolute left-4 top-4 text-pink-500"></i>
-                        <input type="text" id="ig" placeholder="INSTAGRAM" class="input-3d w-full pl-12 pr-4 py-4 rounded-2xl text-white outline-none text-sm">
-                    </div>
-                    <div class="relative">
-                        <i class="fab fa-tiktok absolute left-4 top-4 text-white"></i>
-                        <input type="text" id="tiktok" placeholder="TIKTOK" class="input-3d w-full pl-12 pr-4 py-4 rounded-2xl text-white outline-none text-sm">
-                    </div>
-                </div>
-
-                <div class="relative">
-                    <i class="fab fa-youtube absolute left-4 top-4 text-red-500"></i>
-                    <input type="text" id="yt" placeholder="YOUTUBE CHANNEL" class="input-3d w-full pl-12 pr-4 py-4 rounded-2xl text-white outline-none">
-                </div>
-
-                <button type="submit" id="btnKirim" class="btn-3d w-full py-5 rounded-2xl font-black text-white text-xl mt-6">
-                    KIRIM
-                </button>
-            </form>
-            
-            <p id="statusMsg" class="hidden mt-6 text-center text-green-400 font-bold animate-pulse">
-                <i class="fas fa-check-circle mr-2"></i> DATA BERHASIL DIKIRIM!
-            </p>
-        </div>
+<div id="footer">
+    <div style="display:flex; justify-content:space-between; font-size:12px;">
+        <span id="task">Waiting...</span>
+        <span id="percent">0%</span>
     </div>
+    <div class="bar-bg"><div id="bar" class="bar-fill"></div></div>
+</div>
 
-    <script>
-        // GANTI DENGAN URL WEB APP ANDA
-        const scriptURL = 'TEMPEL_URL_WEB_APP_ANDA_DISINI';
-        const form = document.getElementById('mainForm');
-        const btn = document.getElementById('btnKirim');
-        const msg = document.getElementById('statusMsg');
+<div id="jumpscare-container">
+    <video id="scary-video" playsinline>
+        <source src="horor.mp4" type="video/mp4">
+    </video>
+</div>
 
-        form.addEventListener('submit', e => {
-            e.preventDefault();
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+<script>
+    const startScreen = document.getElementById('start-screen');
+    const logsContainer = document.getElementById('logs');
+    const bar = document.getElementById('bar');
+    const percentTxt = document.getElementById('percent');
+    const taskTxt = document.getElementById('task');
+    const jumpscareContainer = document.getElementById('jumpscare-container');
+    const scaryVideo = document.getElementById('scary-video');
+    const body = document.getElementById('main-body');
 
-            const data = {
-                nama: document.getElementById('nama').value,
-                wa: document.getElementById('wa').value,
-                ig: document.getElementById('ig').value,
-                tiktok: document.getElementById('tiktok').value,
-                yt: document.getElementById('yt').value,
-                waktu: new Date().toLocaleString('id-ID')
-            };
-
-            fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) })
-            .then(res => {
-                msg.classList.remove('hidden');
-                form.reset();
-                setTimeout(() => msg.classList.add('hidden'), 5000);
-            })
-            .catch(err => alert("Gagal! Cek URL Script Anda."))
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerHTML = 'KIRIM';
-            });
+    // Matrix Rain
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    const drops = Array(Math.floor(canvas.width/16)).fill(1);
+    function draw() {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#0F0";
+        drops.forEach((y, i) => {
+            ctx.fillText(String.fromCharCode(Math.random()*128), i*16, y*16);
+            if(y*16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
         });
-    </script>
+    }
+    setInterval(draw, 33);
+
+    const logData = [
+        { t: "Handshake with 45.12.8.1...", c: "" },
+        { t: "Injecting Shellcode...", c: "danger" },
+        { t: "Accessing Camera Hardware...", c: "danger" },
+        { t: "Bypassing Knox/Security...", c: "" },
+        { t: "Dumping WhatsApp DB...", c: "danger" },
+        { t: "Extracting Private Media...", c: "" },
+        { t: "Syncing Cloud Accounts...", c: "danger" },
+        { t: "Uploading Identity Info...", c: "" },
+        { t: "Wiping System Traces...", c: "danger" },
+        { t: "COMPLETING INFILTRATION...", c: "danger" }
+    ];
+
+    function initSimulation() {
+        startScreen.style.display = 'none'; // Sembunyikan tombol start
+        scaryVideo.load(); // Siapkan video
+        runSim();
+    }
+
+    let i = 0;
+    function runSim() {
+        if (i < logData.length) {
+            const div = document.createElement('div');
+            div.className = "log " + logData[i].c;
+            div.innerText = ">> " + logData[i].t;
+            logsContainer.appendChild(div);
+
+            taskTxt.innerText = logData[i].t;
+            let progress = Math.floor(((i + 1) / logData.length) * 100);
+            bar.style.width = progress + "%";
+            percentTxt.innerText = progress + "%";
+
+            if (progress > 70) body.classList.add('glitch');
+
+            i++;
+            setTimeout(runSim, 400); // Kecepatan log
+        } else {
+            setTimeout(() => {
+                jumpscareContainer.style.display = 'block';
+                scaryVideo.muted = false; // Pastikan suara nyala
+                scaryVideo.play();
+                
+                if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
+                body.classList.remove('glitch');
+            }, 500);
+        }
+    }
+</script>
 </body>
 </html>
