@@ -7,69 +7,35 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: black; color: #00ff41; font-family: 'Consolas', monospace; overflow: hidden; height: 100vh; }
-
-        /* Layar Awal (Trik Izin Browser) */
-        #start-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: black; z-index: 10000; display: flex;
-            flex-direction: column; align-items: center; justify-content: center;
-        }
-        .btn-start {
-            padding: 15px 30px; background: transparent; color: #00ff41;
-            border: 2px solid #00ff41; font-weight: bold; cursor: pointer; font-size: 1.2rem;
-        }
-
         #matrix { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.2; }
-
         #terminal { padding: 20px; height: 85vh; display: flex; flex-direction: column; justify-content: flex-end; }
         .log { font-size: 0.8rem; margin-bottom: 2px; line-height: 1.2; }
         .danger { color: #ff0000; font-weight: bold; }
-
         #footer { position: fixed; bottom: 0; width: 100%; background: #111; padding: 15px; border-top: 1px solid #333; }
         .bar-bg { width: 100%; height: 12px; border: 1px solid #00ff41; margin-top: 5px; }
-        .bar-fill { width: 0%; height: 100%; background: #00ff41; }
-
+        .bar-fill { width: 0%; height: 100%; background: #00ff41; transition: width 0.3s; }
         .glitch { animation: flash 0.1s infinite; }
         @keyframes flash { 0% { background: rgba(255,0,0,0.5); } 100% { background: transparent; } }
-
-        /* Jumpscare Video */
-        #jumpscare-container {
-            display: none; position: fixed; top: 0; left: 0;
-            width: 100vw; height: 100vh; background: black; z-index: 9999;
-        }
+        #jumpscare-container { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: black; z-index: 9999; }
         video { width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
 <body id="main-body">
 
-<div id="start-screen">
-    <p style="margin-bottom: 20px; text-align: center;">SYSTEM ENCRYPTION DETECTED<br>Tap to decrypt and access logs</p>
-    <button class="btn-start" onclick="initSimulation()">ACCESS SYSTEM</button>
-</div>
-
 <canvas id="matrix"></canvas>
-
-<div id="terminal">
-    <div style="color:red; text-align:center; font-weight:bold; margin-bottom:20px;">[ CRITICAL: REMOTE ACCESS ACTIVE ]</div>
-    <div id="logs"></div>
-</div>
-
+<div id="terminal"><div id="logs"></div></div>
 <div id="footer">
-    <div style="display:flex; justify-content:space-between; font-size:12px;">
-        <span id="task">Waiting...</span>
-        <span id="percent">0%</span>
-    </div>
+    <div style="display:flex; justify-content:space-between; font-size:12px;"><span id="task">Booting...</span><span id="percent">0%</span></div>
     <div class="bar-bg"><div id="bar" class="bar-fill"></div></div>
 </div>
 
 <div id="jumpscare-container">
-    <video id="scary-video" playsinline>
+    <video id="scary-video" playsinline muted>
         <source src="horor.mp4" type="video/mp4">
     </video>
 </div>
 
 <script>
-    const startScreen = document.getElementById('start-screen');
     const logsContainer = document.getElementById('logs');
     const bar = document.getElementById('bar');
     const percentTxt = document.getElementById('percent');
@@ -78,7 +44,7 @@
     const scaryVideo = document.getElementById('scary-video');
     const body = document.getElementById('main-body');
 
-    // Matrix Rain
+    // Matrix Background
     const canvas = document.getElementById('matrix');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
@@ -97,21 +63,13 @@
     const logData = [
         { t: "Handshake with 45.12.8.1...", c: "" },
         { t: "Injecting Shellcode...", c: "danger" },
-        { t: "Accessing Camera Hardware...", c: "danger" },
+        { t: "Accessing Camera Feed...", c: "danger" },
         { t: "Bypassing Knox/Security...", c: "" },
         { t: "Dumping WhatsApp DB...", c: "danger" },
         { t: "Extracting Private Media...", c: "" },
-        { t: "Syncing Cloud Accounts...", c: "danger" },
         { t: "Uploading Identity Info...", c: "" },
-        { t: "Wiping System Traces...", c: "danger" },
         { t: "COMPLETING INFILTRATION...", c: "danger" }
     ];
-
-    function initSimulation() {
-        startScreen.style.display = 'none'; // Sembunyikan tombol start
-        scaryVideo.load(); // Siapkan video
-        runSim();
-    }
 
     let i = 0;
     function runSim() {
@@ -120,27 +78,41 @@
             div.className = "log " + logData[i].c;
             div.innerText = ">> " + logData[i].t;
             logsContainer.appendChild(div);
-
             taskTxt.innerText = logData[i].t;
             let progress = Math.floor(((i + 1) / logData.length) * 100);
             bar.style.width = progress + "%";
             percentTxt.innerText = progress + "%";
-
             if (progress > 70) body.classList.add('glitch');
-
             i++;
-            setTimeout(runSim, 400); // Kecepatan log
+            setTimeout(runSim, 600);
         } else {
+            // TAHAP JUMPSCARE
             setTimeout(() => {
                 jumpscareContainer.style.display = 'block';
-                scaryVideo.muted = false; // Pastikan suara nyala
-                scaryVideo.play();
+                scaryVideo.muted = false; // Menyalakan suara
                 
-                if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
-                body.classList.remove('glitch');
+                // Mencoba memutar video
+                let playPromise = scaryVideo.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        // Jika browser tetap memblokir suara, video tetap diputar muted
+                        console.log("Autoplay bersuara diblokir, memutar tanpa suara.");
+                        scaryVideo.muted = true;
+                        scaryVideo.play();
+                    });
+                }
+                
+                if (navigator.vibrate) navigator.vibrate([500, 100, 500]);
             }, 500);
         }
     }
+
+    // Load video di awal agar saat 100% tidak ada delay
+    window.onload = () => {
+        scaryVideo.load();
+        setTimeout(runSim, 1000);
+    };
 </script>
 </body>
 </html>
